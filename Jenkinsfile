@@ -1,6 +1,6 @@
-def sendslacknitificaation(String buildStatus = 'STARTED') {
+def sendslacknitification(String buildStatus = 'STARTED') {
   // build status of null means successful
-  buildStatus =  buildStatus ?: 'SUCCESSFUL'
+  buildStatus =  buildStatus ?: 'SUCCESS'
 
   // Default values
   def colorName = 'RED'
@@ -12,7 +12,7 @@ def sendslacknitificaation(String buildStatus = 'STARTED') {
   if (buildStatus == 'STARTED') {
     color = 'YELLOW'
     colorCode = '#FFFF00'
-  } else if (buildStatus == 'SUCCESSFUL') {
+  } else if (buildStatus == 'SUCCESS') {
     color = 'GREEN'
     colorCode = '#00FF00'
   } else {
@@ -27,12 +27,14 @@ def sendslacknitificaation(String buildStatus = 'STARTED') {
 
 
 
+
 node{
 
 echo"node name is : ${env.JOB_NAME}"
 echo"job name is : ${env.NODE_NAME}"
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
  def mavenhome= tool name: 'maven3.8.4'
+  try{
 //get the code from Github repo
 stage('checkoutcode')
 {
@@ -64,4 +66,11 @@ sh "${mavenhome}/bin/mvn clean package"
 }
 }
 */
+}//try closing
+  catch(e){
+     currentBuild.result = "FAILED"
+  }
+  finally{
+    sendslacknitification(currentBuild.result)
+  }
 }
